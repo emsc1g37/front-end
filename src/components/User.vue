@@ -14,9 +14,9 @@
     </form>
     <div v-if="state == 3" id="logged-in">
       Bonjour {{username}}
-      <button>Modifier mon profil</button>
+      <button v-on:click="state = 4">Modifier mon profil</button>
       <button v-on:click="deleteUser">Supprimer mon compte</button>
-      <button v-on:click="logout">Déconnexion</button>
+      <button v-on:click="goToLogout">Déconnexion</button>
     </div>
   </div>
 </template>
@@ -42,8 +42,23 @@ export default {
       this.username = ""
     },
     deleteUser() {
-      // TODO: Actually perform the request.
-      this.logout()
+      axios.delete(main.BASE_URL + '/users/' + this.id).then(response => {
+        this.goToLogout()
+      })
+      .catch(error => {
+        this.error = "Erreur lors de la suppression de votre compte. Merci de réessayer."
+      })
+    },
+    editUser() {
+      if (!this.validateForm()) return
+      axios.patch(main.BASE_URL + '/users/' + this.id, {user: {email: this.email, username: this.username}}).then(response => {
+        this.email = response.data.data.email
+        this.username = response.data.data.username
+        this.goToLoggedIn()
+      })
+      .catch(error => {
+        this.error = "Erreur lors de la modification de vos informations. Veuillez réessayer."
+      })
     },
     getSubmitButtonText() {
       if (this.state == 1) return "Se connecter"
@@ -51,12 +66,20 @@ export default {
       else if (this.state == 4) return "Mettre à jour"
     },
     goToLoggedIn() {
+      this.error = ""
       this.state = 3
       this.$emit("login", this.id, this.email, this.username)
     },
     goToLogin() {
       this.clearFields()
       this.state = 1
+    },
+    goToLogout() {
+      this.clearFields()
+      this.error = ""
+      this.id = 0
+      this.state = 0
+      this.$emit("logout")
     },
     goToSignUp() {
       this.clearFields()
@@ -68,7 +91,6 @@ export default {
         if (response.data.data == null)
           this.error = "Adresse mail ou nom d'utilisateur invalide."
         else {
-          this.error = ""
           this.email = response.data.data.email
           this.id = response.data.data.id
           this.username = response.data.data.username
@@ -79,20 +101,14 @@ export default {
         this.error = "Erreur de connexion au réseau."
       })
     },
-    logout() {
-      this.clearFields()
-      this.id = 0
-      this.state = 0
-      this.$emit("logout")
-    },
     onSubmit() {
       if (this.state == 1) this.login()
       else if (this.state == 2) this.signUp()
+      else if (this.state == 4) this.editUser()
     },
     signUp() {
       if (!this.validateForm()) return
       axios.post(main.BASE_URL + '/users', {user: {email: this.email, username: this.username}}).then(response => {
-          this.error = ''
           this.email = response.data.data.email
           this.id = response.data.data.id
           this.username = response.data.data.username
