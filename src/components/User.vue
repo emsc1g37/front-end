@@ -26,7 +26,7 @@ import axios from 'axios'
 import main from '../main'
 
 export default {
-  name: 'HelloWorld',
+  name: 'User',
   data() {
     return {
       email: "",
@@ -50,6 +50,10 @@ export default {
       else if (this.state == 2) return "S'inscrire"
       else if (this.state == 4) return "Mettre à jour"
     },
+    goToLoggedIn() {
+      this.state = 3
+      this.$emit("login", this.id, this.email, this.username)
+    },
     goToLogin() {
       this.clearFields()
       this.state = 1
@@ -59,24 +63,21 @@ export default {
       this.state = 2
     },
     login() {
-      if (this.email == "" || this.username == "") {
-        this.error = "Veuillez compléter le formulaire."
-        return
-      }
+      if (!this.validateForm()) return
       axios.get(main.BASE_URL + "/users/?email=" + this.email + "&username=" + this.username).then(response => {
-          if (response.data.data == null)
-            this.error = "Adresse mail ou nom d'utilisateur invalide."
-          else {
-            this.error = ""
-            this.email = response.data.data.email
-            this.id = response.data.data.id
-            this.username = response.data.data.username
-            this.state = 3
-            this.$emit("login", this.id, this.email, this.username)
-          }
-        }, error => {
-          this.error = "Erreur de connexion au réseau."
-        })
+        if (response.data.data == null)
+          this.error = "Adresse mail ou nom d'utilisateur invalide."
+        else {
+          this.error = ""
+          this.email = response.data.data.email
+          this.id = response.data.data.id
+          this.username = response.data.data.username
+          this.goToLoggedIn()
+        }
+      })
+      .catch(error => {
+        this.error = "Erreur de connexion au réseau."
+      })
     },
     logout() {
       this.clearFields()
@@ -86,6 +87,27 @@ export default {
     },
     onSubmit() {
       if (this.state == 1) this.login()
+      else if (this.state == 2) this.signUp()
+    },
+    signUp() {
+      if (!this.validateForm()) return
+      axios.post(main.BASE_URL + '/users', {user: {email: this.email, username: this.username}}).then(response => {
+          this.error = ''
+          this.email = response.data.data.email
+          this.id = response.data.data.id
+          this.username = response.data.data.username
+          this.goToLoggedIn()
+      })
+      .catch(error => {
+        this.error = "Erreur lors de l'inscription. Veuillez réessayer."
+      })
+    },
+    validateForm() {
+      if (this.email == "" || this.username == "") {
+        this.error = "Veuillez compléter le formulaire."
+        return false
+      }
+      return true
     }
   },
 }
