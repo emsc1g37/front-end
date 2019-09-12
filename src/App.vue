@@ -1,17 +1,35 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+     <User v-on:login="onLogin" v-on:logout="onLogout"></User>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import User from './components/User.vue'
 
 export default {
   name: 'app',
   components: {
-    HelloWorld
+    User
+  },
+  data() {
+    return {
+      email: "",
+      id: 0,
+      username: ""
+    }
+  },
+  methods: {
+    onLogin(id, email, username) {
+      this.email = email
+      this.id = id
+      this.username = username
+    },
+    onLogout(event) {
+      this.email = ""
+      this.id = 0
+      this.username = ""
+    }
   }
 }
 </script>
