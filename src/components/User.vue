@@ -1,11 +1,11 @@
 <template>
   <div class="user">
+    <div v-if="error != ''" class="error-message">{{error}}</div>
     <div v-if="state == 0" class="logged-out">
       <button v-on:click="goToLogin">Se connecter</button>
       <button v-on:click="goToSignUp">S'inscrire</button>
     </div>
     <form v-if="state != 0 && state != 3" v-on:submit.prevent="onSubmit">
-      <div v-if="error != ''" class="error-message">{{error}}</div>
       <label for="email">Adresse mail :</label>
       <input type="email" v-model="email" id="email" name="email" required/>
       <label for="username">Nom d'utilisateur :</label>
